@@ -1,4 +1,4 @@
-# StudyForge · 秋招复习资料拆解工作台
+# StudyForge · 复习资料拆解工作台
 
 > 上传 PDF / MD / TXT → 智能分块 → 层级思维导图 + 知识卡片 → 导出 Anki 复习。
 > 为“几十页 PDF 背不完、不知道哪里是重点”的求职复习场景，构建 **读 → 拆 → 记** 的闭环。
@@ -7,7 +7,7 @@
 
 ---
 
-## 一、技术栈（全部用你点名的）
+## 一、技术栈
 
 | 层 | 技术 |
 |---|---|
@@ -20,9 +20,9 @@
 | CI | GitHub Actions（`mvn verify`） |
 | 部署 | Docker + docker-compose（MySQL + 应用） |
 
-## 二、四个核心设计（你的亮点，代码里都能找到）
+## 二、四个核心设计
 
-### 1. 分块策略可插拔（把“分块”当一等公民，不是黑盒）
+### 1. 分块策略可插拔
 `chunking/ChunkingStrategy` 是接口，三种实现即插即用：
 - `FixedLengthStrategy` — 固定长度 + 重叠窗口（确定性、最稳定）；
 - `HeadingBasedStrategy` — 按标题层级切分（块标题 = 章节名，可解释性最强）；
@@ -32,7 +32,7 @@
 
 > 升级路径（README 里讲清）：把词汇重叠度换成 embedding 向量余弦相似度，即成为真正的向量级语义分块——分块是可插拔的，换实现即可。
 
-### 2. Map-Reduce 式大纲生成（真实工程问题，不是“调一次 API 画个图”）
+### 2. Map-Reduce 式大纲生成
 `service/OutlineService`：
 - 长文档塞不进一次 LLM 上下文 → **MAP**：逐块让 LLM 提炼小结+关键词；
 - **REDUCE**：合并所有小结，让 LLM 生成层级大纲（JSON）；
@@ -59,7 +59,7 @@
 
 ### 方式 A：Docker 一键（推荐，免装环境）
 ```bash
-# 1) 复制并填写你的 API Key（可选；不填也能跑，走兜底）
+# 1) 复制并填写你的 API Key（可选）
 cp .env.example .env      # 没有该文件就手动建：LLM_API_KEY=sk-xxx
 
 # 2) 启动 MySQL + 应用
@@ -97,37 +97,7 @@ mvn clean verify            # 编译 + 单测 + Spring 上下文冒烟（自动�
 ```
 推送到 GitHub 后，`.github/workflows/ci.yml` 会自动跑同样的构建。
 
-## 六、上传到 GitHub（新手手把手）
-
-### 第 1 步：建 GitHub 仓库
-1. 打开 https://github.com/new
-2. 仓库名填 `StudyForge`，选 **Public**（简历可看）
-3. **先不要勾**“Add a README”，点 Create repository
-
-### 第 2 步：在本地初始化并推上去
-在项目根目录（`StudyForge/` 文件夹内）打开终端，依次执行：
-```bash
-git init
-git add .
-git commit -m "feat: StudyForge 初版 - 分块/大纲/卡片/Anki/异步任务"
-
-git branch -M main
-git remote add origin https://github.com/<你的用户名>/StudyForge.git
-git push -u origin main
-```
-> 把 `<你的用户名>` 换成你的 GitHub 用户名。
-
-### 第 3 步：检查
-- 仓库页面出现全部代码 ✅
-- **Actions** 标签页里 `CI` 跑绿（构建通过）✅
-- 本地也能 `docker compose up` 跑起来 ✅
-
-> ⚠️ 安全提示：`.env`、`application.yml` 里**不要**提交真实 API Key（已被 `.gitignore` 忽略）。Key 用环境变量注入。
-
-## 七、给简历 / 面试的一句话叙事
-> “我做了 StudyForge：一个复习资料拆解工作台。上传 PDF 后自动分块、生成思维导图和带面试问法的知识卡片、导出 Anki。技术上我把**分块做成可插拔策略并用主题一致性指标对比**，用 **Map-Reduce 解决长文档塞不进上下文**的问题，并做了 JSON Schema 校验、失败重试、标题兜底、文件哈希缓存和调用成本记录这套**可靠性保障**，全程本地处理、用户自备 API Key，强调隐私与成本可控。”
-
-## 八、接口一览
+## 六、接口一览
 
 | 方法 | 路径 | 说明 |
 |---|---|---|
@@ -139,7 +109,7 @@ git push -u origin main
 | GET | `/api/documents/{id}/cards/export` | 导出 Anki（CSV） |
 | GET | `/api/stats/llm` | LLM 调用统计（token/失败） |
 
-## 九、目录速览
+## 七、目录速览
 ```
 src/main/java/com/studyforge/
   chunking/     # 分块策略 + 评估器（核心亮点1）
@@ -154,9 +124,3 @@ src/main/resources/
   application.yml
 ```
 
-## 十、Roadmap（可选下一步）
-- [ ] embedding 版语义分块（升级 `SemanticBoundaryStrategy`）
-- [ ] 生成真正的 `.apkg`（Anki 原生包，含间隔重复调度）替代 CSV
-- [ ] 卡片批量重排 / 按考点打标 / 错题回环
-- [ ] 前端拆分（React/Vite）+ markmap 交互折叠
-- [ ] 多用户 / 云端部署（当前定位单机+本地处理）
