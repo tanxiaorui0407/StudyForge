@@ -1,0 +1,67 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: studyforge
+  datasource:
+    # 默认连 MySQL；也可以临时用 H2：启动时加 --spring.profiles.active=test
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/studyforge?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false}
+    username: ${SPRING_DATASOURCE_USERNAME:studyforge}
+    password: ${SPRING_DATASOURCE_PASSWORD:studyforge}
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+  servlet:
+    multipart:
+      max-file-size: 30MB
+      max-request-size: 35MB
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    # 本地调试时看 SQL；上线可改为 org.apache.ibatis.logging.nologging.NoLoggingImpl
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+# ---------- StudyForge 业务配置 ----------
+studyforge:
+  llm:
+    # OpenAI 兼容接口。enabled 默认 false：不配 Key 也能跑（自动走标题降级兜底）
+    enabled: ${LLM_ENABLED:false}
+    base-url: ${LLM_BASE_URL:https://api.deepseek.com}
+    api-key: ${LLM_API_KEY:}
+    model: ${LLM_MODEL:deepseek-chat}
+    max-tokens: 2048
+    timeout-seconds: 60
+  chunking:
+    fixed-size: 1200        # 固定长度策略：每块字符数
+    overlap: 120            # 相邻块重叠字符数（避免切在语义中间）
+    max-blocks: 300         # 单文档最大块数（保护 token 预算）
+    min-block-len: 80       # 过短的块会被并入前一块
+  outline:
+    map-reduce-retries: 2   # JSON 校验失败后的重试次数
+    max-outline-nodes: 80   # 大纲节点上限
+  cache:
+    enabled: true           # 相同文件哈希是否复用解析/大纲结果（省 token）
+
+---
+# ---------- 测试 profile：用 H2，无需 MySQL ----------
+spring:
+  config:
+    activate:
+      on-profile: test
+  datasource:
+    url: jdbc:h2:mem:studyforge;MODE=MySQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1
+    username: sa
+    password: ""
+    driver-class-name: org.h2.Driver
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl

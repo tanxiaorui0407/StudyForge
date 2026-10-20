@@ -1,0 +1,24 @@
+# Maven
+target/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+
+# OS
+.DS_Store
+
+# 日志 / 本地数据
+*.log
+logs/
+data/
+docker-data/
+
+# 密钥不要提交到 GitHub
+*.key
+*.pem
+.env
